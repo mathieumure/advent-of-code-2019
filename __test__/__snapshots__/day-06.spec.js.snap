@@ -1,0 +1,22 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`day-O2 - part 2 should run 1`] = `322`;
+
+exports[`day-O6 - part 1 should parse orbits 1`] = `
+Array [
+  "[COM] => {  }",
+  "[B] => { COM }",
+  "[C] => { B }",
+  "[D] => { C }",
+  "[E] => { D }",
+  "[F] => { E }",
+  "[G] => { B }",
+  "[H] => { G }",
+  "[I] => { D }",
+  "[J] => { E }",
+  "[K] => { J }",
+  "[L] => { K }",
+]
+`;
+
+exports[`day-O6 - part 1 should run 1`] = `119831`;
