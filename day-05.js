@@ -137,7 +137,7 @@ export const computePart2 = items => {
 }
 
 export const run = async part => {
-    const data = await parse(`./data/day-05-${part}.txt`);
+    const data = await parse(`./data/day-05.txt`);
     const result = part === 'part1' ? computePart1(data) : computePart2(data)
     return result
 }
