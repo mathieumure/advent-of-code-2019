@@ -1,0 +1,9 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`day-O9 - part 1 should run 1`] = `3638931938n`;
+
+exports[`day-O9 - part 2 should run 1`] = `
+Array [
+  86025n,
+]
+`;
