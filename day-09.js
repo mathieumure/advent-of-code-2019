@@ -1,7 +1,7 @@
 import {readFile} from 'fs'
 import {join} from 'path'
 import {promisify} from 'util'
-import {computeIntProgram, computeIntProgramWithState} from "./utils/intProgram";
+import {computeIntProgram} from "./utils/intProgram";
 
 const asyncReadFile = promisify(readFile)
 

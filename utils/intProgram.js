@@ -102,8 +102,11 @@ export const computeIntProgram = (program, input, onOutput = DEFAULT_OUTPUT) => 
         if(opcode === INSTRUCTION.OUTPUT) {
             const param1 = items[i+1]
             const valueToPrint = getValue(modes[0],  param1)
-            console.log(nbRun, valueToPrint)
-            onOutput(valueToPrint)
+            //console.log(nbRun, valueToPrint)
+            const newInput = onOutput(valueToPrint)
+            if (newInput !== undefined && newInput !== null) {
+                input.push(newInput)
+            }
         }
         if(opcode === INSTRUCTION.JUMP_IF_TRUE) {
             const param1 = items[i+1]
