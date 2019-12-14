@@ -1,141 +1,192 @@
 import {readFile, appendFile} from 'fs'
 import {join} from 'path'
 import {promisify} from 'util'
+import {computeIntProgram} from "./utils/intProgram";
 
 const asyncReadFile = promisify(readFile)
 
 export const parse = async path => {
     const data = await asyncReadFile(join(__dirname, path));
     const input = data.toString()
-        .split('\n');
+        .split('\n')[0]
+        .split(',')
+        .map(it => BigInt(it));
 
     return input;
 }
 
+const EMOJI_BY_TYPE = {
+    0: "⬜️",
+    1: "⬛️",
+    2: "🟫",
+    3: "🟦",
+    4: "🔵"
+}
+
 class Point {
-    constructor({x, y, z}) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
+    constructor({x, y, type}) {
+        this.x = x
+        this.y = y
+        this.type = type
     }
 }
 
-const compare = (a, b, key) => {
-    const aValue = a[key]
-    const bValue = b[key]
-    if (aValue === bValue) {
-        return 0;
-    }
-    return aValue < bValue ? 1 : -1
-}
-class Moon {
-    constructor({x, y, z}) {
-        this.position = new Point({x, y, z});
-        this.velocity = new Point({x: 0, y: 0, z: 0});
+class Grid {
+    constructor() {
+        this.data = []
     }
 
-    updateVelocityWithMoon(moon) {
-        this.velocity.x += compare(this.position, moon.position, 'x')
-        this.velocity.y += compare(this.position, moon.position, 'y')
-        this.velocity.z += compare(this.position, moon.position, 'z')
+    push (point) {
+        if (!this.data[point.y]) {
+            this.data[point.y] = []
+        }
+        this.data[point.y][point.x] = point
     }
 
-    updatePosition() {
-        this.position.x += this.velocity.x
-        this.position.y += this.velocity.y
-        this.position.z += this.velocity.z
+    get(x, y) {
+        return this.data[y][x]
     }
 
-    clone() {
-        const cl = new Moon(this.position)
-        cl.velocity = {...this.velocity}
-        return cl
-    }
-
-    getEnergy () {
-        const pot = Math.abs(this.position.x) + Math.abs(this.position.y) + Math.abs(this.position.z)
-        const kin = Math.abs(this.velocity.x) + Math.abs(this.velocity.y) + Math.abs(this.velocity.z)
-        return pot * kin
-    }
-}
-
-const affectGravity = moons => {
-    return moons.map((moon, i) => {
-        const newMoon = moon.clone();
-        moons.forEach((other, index) => {
-            if (i !== index) {
-                newMoon.updateVelocityWithMoon(other)
-            }
+    getAllPoints () {
+        const points = []
+        this.data.forEach(line => {
+            line.forEach(point => {
+                points.push(point)
+            })
         })
-        newMoon.updatePosition();
-        return newMoon;
-    })
+        return points
+    }
+
+    isComplete () {
+        return this.data.length === 23 && this.data[22].length === 43
+    }
 }
 
-export const computePart1 = (items, nbIteration = 1000) => {
-    const parseRegex = /<x=(-?\d+), y=(-?\d+), z=(-?\d+)>/
-    const moons = items.map(it => {
-        const [, x, y, z] = parseRegex.exec(it)
-            .map(val => parseInt(val, 10));
-        return new Moon({x, y, z})
-    })
+const prettyPrint = grid => {
+    const {minX, maxX, minY, maxY} = grid.getAllPoints().reduce((acc, point) => {
+        return {
+            minX: point.x < acc.minX ? point.x : acc.minX,
+            minY: point.y < acc.minY ? point.y : acc.minY,
+            maxX: point.x > acc.maxX ? point.x : acc.maxX,
+            maxY: point.y > acc.maxY ? point.y : acc.maxY,
+        }
+    }, {
+        minX: Number.MAX_SAFE_INTEGER,
+        minY: Number.MAX_SAFE_INTEGER,
+        maxX: Number.MIN_SAFE_INTEGER,
+        maxY: Number.MIN_SAFE_INTEGER
+    });
 
-    let currentMoonsState = moons
-    for (let i = 0; i < nbIteration; i++) {
-        currentMoonsState = affectGravity(currentMoonsState)
+    let line = ''
+    for (let y = minY; y <= maxY; y++) {
+        for(let x = minX; x <= maxX; x++) {
+            const point = grid.get(x, y)
+            if (point) {
+                line += EMOJI_BY_TYPE[point.type]
+            }
+        }
+        line += '\n'
     }
-    
-    return currentMoonsState.reduce((acc, it) => acc + it.getEnergy(), 0);
+    return line
 }
 
-const detectCycleOnCoord = (coord, moons) => {
-    let currentMoons = moons
-    let initialMoonsState = moons.map(it => `[${it.position[coord]};${it.velocity[coord]}`).join(',');
-    let currentMoonsState = ''
-    let iterations = 0
-    while (initialMoonsState !== currentMoonsState) {
-        currentMoons = affectGravity(currentMoons)
-        currentMoonsState = currentMoons.map(it => `[${it.position[coord]};${it.velocity[coord]}`).join(',');
-        iterations++
-    }
-    return iterations
+export const computePart1 = items => {
+    let outputs = []
+    const points = []
+    computeIntProgram(items, [], out => {
+        outputs.push(out)
+        if (outputs.length === 3) {
+            const [x, y, type] = outputs
+            points.push(new Point({x: Number(x), y: Number(y), type: Number(type)}))
+            outputs = []
+        }
+    });
+
+    const grid = prettyPrint(points)
+
+    return points.filter(it => it.type === 2).length
 }
 
-const pgcd = (a, b) => {
-    let divider = a
-    let modulo = b
-    while (modulo !== 0) {
-        const nextModulo = divider % modulo
-        divider = modulo
-        modulo = nextModulo
-    }
-    return divider
-}
-
-const ppcm = (a, b) => {
-    if (a === 0 || b === 0) {
-        return 0;
-    }
-    return a*b / pgcd(a, b)
+const JOYSTICK = {
+    NEUTRAL: BigInt(0),
+    LEFT: BigInt(-1),
+    RIGHT: BigInt(1),
 }
 
 export const computePart2 = items => {
-    const parseRegex = /<x=(-?\d+), y=(-?\d+), z=(-?\d+)>/
-    const moons = items.map(it => {
-        const [, x, y, z] = parseRegex.exec(it)
-            .map(val => parseInt(val, 10));
-        return new Moon({x, y, z})
-    })
+    let outputs = []
+    const grid = new Grid()
+    let score
+    let first = true
+    items[0] = BigInt(2)
+    let lastBallPosition
+    let canMove = false
+    computeIntProgram(items, [], out => {
+        outputs.push(out)
+        if (outputs.length === 3) {
+            const [xBigInt, yBigInt, typeBigInt] = outputs
+            const x = Number(xBigInt)
+            const y = Number(yBigInt)
+            const type = Number(typeBigInt)
+            let action
 
-    const iterationForCycleOnX = detectCycleOnCoord('x', moons);
-    const iterationForCycleOnY = detectCycleOnCoord('y', moons);
-    const iterationForCycleOnZ = detectCycleOnCoord('z', moons);
+            if (x===-1 && y===0) {
+                score = type
+                const gridStr = prettyPrint(grid)
+                console.log("SCORE::: " + score)
+                console.log(gridStr)
+            } else {
+                grid.push(new Point({x, y, type}))
+            }
 
-    return ppcm(ppcm(iterationForCycleOnX, iterationForCycleOnY), iterationForCycleOnZ)
+            if (grid.isComplete()) {
+                if (type === 4 || type === 3) {
+                    const gridStr = prettyPrint(grid)
+                    console.log("SCORE::: " + score)
+                    console.log(gridStr)
+                }
+
+                if (type) {
+                    action = JOYSTICK.NEUTRAL
+                }
+
+                if (type === 4) {
+                    const ball = grid.getAllPoints().find(it => it.type === 4)
+                    const paddle = grid.getAllPoints().find(it => it.type === 3)
+                    const isBallMovingDown = lastBallPosition.y < ball.y
+                    const isBallMovingRight = lastBallPosition.x < ball.x
+
+                    if (!canMove) {
+                        canMove = ball.x === paddle.x
+                    }
+                    else if (ball.x < paddle.x) {
+                        action = JOYSTICK.LEFT
+                    }
+                    else if (ball.x > paddle.x) {
+                        action = JOYSTICK.RIGHT
+                    }
+
+                    lastBallPosition = {x: ball.x, y: ball.y}
+                }
+            }
+            else if (type === 4) {
+                lastBallPosition = {x, y}
+            }
+
+
+            outputs = []
+            if (type === 4) {
+                return action;
+            }
+            // process.stdout.write('\x1b[2J');
+        }
+    });
+
+    return score
 }
 
 export const run = async part => {
-    const data = await parse(`./data/day-12.txt`);
+    const data = await parse(`./data/day-13.txt`);
     const result = part === 'part1' ? computePart1(data) : computePart2(data)
     return result
 }

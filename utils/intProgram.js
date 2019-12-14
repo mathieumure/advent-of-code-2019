@@ -94,8 +94,12 @@ export const computeIntProgram = (program, input, onOutput = DEFAULT_OUTPUT) => 
         }
         if(opcode === INSTRUCTION.INPUT) {
             const resultIndex = getResultIndex(modes[0], items[i+1])
-            const inputValue = input[readInputIndex]
-            readInputIndex++;
+            let inputValue = input[readInputIndex]
+            if (inputValue === undefined) {
+                inputValue = input[readInputIndex-BigInt(1)]
+            } else {
+                readInputIndex++;
+            }
             // console.log('INPUT ::: ', inputValue)
             items[resultIndex] = inputValue
         }
