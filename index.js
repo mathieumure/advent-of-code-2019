@@ -1,3 +1,3 @@
-import {run} from './day-13'
+import { run } from "./day-13";
 
-run('part2')
+run("part2");

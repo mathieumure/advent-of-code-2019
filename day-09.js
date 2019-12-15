@@ -1,39 +1,39 @@
-import {readFile} from 'fs'
-import {join} from 'path'
-import {promisify} from 'util'
-import {computeIntProgram} from "./utils/intProgram";
+import { readFile } from "fs";
+import { join } from "path";
+import { promisify } from "util";
+import { computeIntProgram } from "./utils/intProgram";
 
-const asyncReadFile = promisify(readFile)
+const asyncReadFile = promisify(readFile);
 
 export const parse = async path => {
-    const data = await asyncReadFile(join(__dirname, path));
-    const input = data.toString()
-        .split('\n')[0]
-        .split(',')
-        .map(it => BigInt(it));
+  const data = await asyncReadFile(join(__dirname, path));
+  const input = data
+    .toString()
+    .split("\n")[0]
+    .split(",")
+    .map(it => BigInt(it));
 
-    return input;
-}
+  return input;
+};
 
 export const execIntProgram = (program, input = []) => {
-    const output = []
-    computeIntProgram(program, input, out => {
-        output.push(out)
-    })
-    return output
-}
-
+  const output = [];
+  computeIntProgram(program, input, out => {
+    output.push(out);
+  });
+  return output;
+};
 
 export const computePart1 = items => {
-   return execIntProgram(items, [BigInt(1)])
-}
+  return execIntProgram(items, [BigInt(1)]);
+};
 
 export const computePart2 = items => {
-    return execIntProgram(items, [BigInt(2)])
-}
+  return execIntProgram(items, [BigInt(2)]);
+};
 
 export const run = async part => {
-    const data = await parse(`./data/day-09.txt`);
-    const result = part === 'part1' ? computePart1(data) : computePart2(data)
-    return result
-}
+  const data = await parse(`./data/day-09.txt`);
+  const result = part === "part1" ? computePart1(data) : computePart2(data);
+  return result;
+};
