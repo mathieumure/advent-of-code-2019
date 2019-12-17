@@ -59,6 +59,18 @@ export class Grid {
     return points;
   }
 
+  getPointsByType(type) {
+    const points = [];
+    this.data.forEach(line => {
+      line.forEach(point => {
+        if (point.type === type) {
+          points.push(point);
+        }
+      });
+    });
+    return points;
+  }
+
   getNeighbors(point) {
     const neighbors = [];
     for (let i = -1; i < 2; i++) {
@@ -91,7 +103,7 @@ export class Grid {
     );
 
     let line = "";
-    for (let y = maxY; y >= minY; y--) {
+    for (let y = minY; y <= maxY; y++) {
       for (let x = minX; x <= maxX; x++) {
         const point = this.get(x, y);
         if (point) {

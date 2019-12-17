@@ -1,0 +1,5 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`day-17 - part 1 should run 1`] = `7584`;
+
+exports[`day-17 - part 2 should run 1`] = `1016738`;
